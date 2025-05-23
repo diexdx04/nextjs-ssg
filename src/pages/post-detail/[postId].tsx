@@ -1,33 +1,48 @@
-import React from 'react';
-import { instance } from '../api/instance';
-
 interface Params {
   postId: string;
+}
+
+interface Author {
+  name: string;
 }
 
 interface Post {
   id: number;
   content: string;
-  author: { name: string };
+  author: Author;
 }
 
-export async function getStaticPaths() {
-  const response = await instance.get('posts');
-  const posts = response.data.data;
+const mockData: Post[] = [
+  {
+    id: 1,
+    content: "Đây là bài viết đầu tiên!!",
+    author: { name: "Đặng Xuân Điệp" },
+  },
+  {
+    id: 2,
+    content: "Đây là bài viết thứ hai22",
+    author: { name: "Đặng Xuân Điệp 22" },
+  },
+];
 
-  const paths = posts.map((post: { id: number }) => ({
+export async function getStaticPaths() {
+  const paths = mockData.map((post) => ({
     params: { postId: post.id.toString() },
   }));
 
-  return { paths, fallback: false }; // fallback: false để trả về 404 nếu không tìm thấy
+  return { paths, fallback: false };
 }
 
-// Lấy dữ liệu cho từng bài viết khi build
 export async function getStaticProps({ params }: { params: Params }) {
   const { postId } = params;
 
-  const response = await instance.get(`posts/${postId}`);
-  const post: Post = response.data.data;
+  const foundPost = mockData.find((e) => e.id === Number(postId));
+
+  if (!foundPost) {
+    return { notFound: true };
+  }
+
+  const post: Post = foundPost;
 
   return {
     props: {
@@ -36,11 +51,12 @@ export async function getStaticProps({ params }: { params: Params }) {
   };
 }
 
-// Component hiển thị chi tiết bài viết
 const PostDetailPage = ({ post }: { post: Post }) => {
   return (
     <div>
-      <p><strong>Tác giả:</strong> {post.author.name}</p>
+      <p>
+        <strong>Tác giả:</strong> {post.author.name}
+      </p>
       <h1>Nội dung: {post.content}</h1>
     </div>
   );
